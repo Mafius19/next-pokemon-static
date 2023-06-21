@@ -1,11 +1,14 @@
+import React, { useEffect, useState } from 'react'
+
+import { Button, Card, Container, Grid, Text, Image } from '@nextui-org/react';
+import { GetStaticProps, NextPage, GetStaticPaths  } from 'next';
+
+import confetti from 'canvas-confetti';
+
 import { pokeApi } from '@/api';
 import { Layout } from '@/components/layouts';
 import { Pokemon } from '@/interfaces';
-import { Button, Card, Container, Grid, Text, Image } from '@nextui-org/react';
-import { GetStaticProps, NextPage, GetStaticPaths  } from 'next';
-import { useRouter } from 'next/router'
-import React from 'react'
-import { Other } from '../../interfaces/pokemon-full';
+import { localFavorites } from '@/utils';
 
 interface Props {
   // pokemon: any;
@@ -14,8 +17,34 @@ interface Props {
 
 const PokemonPage: NextPage<Props> = ({pokemon}) => {
 
+  const [isInFavorites, setIsInFavorites] = useState(localFavorites.existInFavorites(pokemon.id))
+  // const [width, setWidth] = useState(window.innerWidth)
+
+  // useEffect(() => {
+  //   setWidth(window.innerWidth)
+  // }, [window.innerHeight])
+  
+  const onToggleFavorite = () => {
+    localFavorites.toggleFavorites(pokemon.id);
+    setIsInFavorites(!isInFavorites)
+    if (isInFavorites) return;
+
+    confetti({
+      zIndex: 999,
+      particleCount: 100,
+      spread: 160,
+      angle: -100,
+      origin: {
+        x:1,
+        y:0,
+      }
+    })
+  }
+
+  console.log({existeWindow: typeof window})
+
   return (
-    <Layout title='Algun Pokemon'>
+    <Layout title={pokemon.name}>
       <Grid.Container css={{mt: '5px'}} gap={2}>
         <Grid xs={12} sm={4}>
           <Card isHoverable css={{p:'30px'}}>
@@ -33,13 +62,14 @@ const PokemonPage: NextPage<Props> = ({pokemon}) => {
 
         <Grid xs={12} sm={8}>
           <Card isHoverable css={{p:'30px'}}>
-            <Card.Header css={{ display: 'flex', justifyContent:'space-between'}}>
+            <Card.Header css={{ display: 'flex', justifyContent:'space-between', flexDirection: 'column'}}>
               <Text h1 transform='capitalize'>{pokemon.name}</Text>
               <Button
               color='gradient'
-              ghost
+              ghost={ !isInFavorites }
+              onClick={onToggleFavorite}
               >
-                Guardar en favoritos
+                {isInFavorites? 'En Favoritos': 'Guardar en favoritos'}
               </Button>
             </Card.Header>
             <Card.Body>
