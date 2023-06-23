@@ -7,7 +7,7 @@ import confetti from 'canvas-confetti';
 
 import { pokeApi } from '@/api';
 import { Layout } from '@/components/layouts';
-import { Pokemon } from '@/interfaces';
+import { Pokemon, PokemonListResponse } from '@/interfaces';
 import { getPokemonInfo, localFavorites } from '@/utils';
 
 interface Props {
@@ -15,14 +15,9 @@ interface Props {
   pokemon: Pokemon;
 }
 
-const PokemonPage: NextPage<Props> = ({pokemon}) => {
+const PokemonByNamePage: NextPage<Props> = ({pokemon}) => {
 
   const [isInFavorites, setIsInFavorites] = useState(localFavorites.existInFavorites(pokemon.id))
-  // const [width, setWidth] = useState(window.innerWidth)
-
-  // useEffect(() => {
-  //   setWidth(window.innerWidth)
-  // }, [window.innerHeight])
   
   const onToggleFavorite = () => {
     localFavorites.toggleFavorites(pokemon.id);
@@ -113,15 +108,17 @@ const PokemonPage: NextPage<Props> = ({pokemon}) => {
 
 export const getStaticPaths: GetStaticPaths = async (ctx) => {
 
-  const pokemon1010 = [...Array(151)].map((value,index) => `${index + 1}`);
+ const {data} = await pokeApi.get<PokemonListResponse>('/pokemon?limit=151');
+
+  const pokemon1010 = [...Array(151)].map((value, index) => `${data.results[index].name}`);
   
   //al colocar false en la propiedad fallback, si se accede a una ruta no especificada por los parametros
     // la aplicacion dara un 404, en cambio si se coloca "blocking" se dejara pasar aunque no se
     // haya definido parametros para dicha ruta (por ej si el num de pokemon requerido es 9999
     // siendo este pokemon inexistente)
   return {
-    paths: pokemon1010.map(id => ({
-      params: {id}
+    paths: pokemon1010.map(name => ({
+      params: {name}
     })),
     fallback: false 
   }
@@ -129,13 +126,13 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
 
 export const getStaticProps: GetStaticProps = async (ctx) => {
 
-  const { id } = ctx.params as {id: string}
+  const { name } = ctx.params as {name: string}
 
   return {
     props: {
-      pokemon: await getPokemonInfo(id)
+      pokemon: await getPokemonInfo(name)
     }
   }
 }
 
-export default PokemonPage
+export default PokemonByNamePage
