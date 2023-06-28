@@ -41,7 +41,7 @@ const PokemonPage: NextPage<Props> = ({pokemon}) => {
     })
   }
 
-  console.log({existeWindow: typeof window})
+  // console.log({existeWindow: typeof window})
 
   return (
     <Layout title={pokemon.name}>
@@ -123,7 +123,8 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
     paths: pokemon1010.map(id => ({
       params: {id}
     })),
-    fallback: false 
+    // fallback: false // false muestra la pag 404 para no encotrada o creadas
+    fallback: 'blocking' //permite averiguar si existe la pagina proveyendo de ISG (Incremental Static Generation) aunque aun falta de una validacion
   }
 }
 
@@ -131,9 +132,22 @@ export const getStaticProps: GetStaticProps = async (ctx) => {
 
   const { id } = ctx.params as {id: string}
 
+  const pokemon = await getPokemonInfo(id)
+
+  if (!pokemon) {
+    return {
+      redirect: {
+        destination: '/',
+        permanent: false, // para q no sea permanente ya q en un futuro puede ser q exista el pokemon 2000 y asi
+      } 
+    }
+  }
+
   return {
     props: {
-      pokemon: await getPokemonInfo(id)
+      pokemon,
+      // para dar la caracteristica de ISR (Incremental Static Regeneration) expresado en segundos
+      revalidate: 86400, // 60 * 60 * 24
     }
   }
 }

@@ -36,7 +36,7 @@ const PokemonByNamePage: NextPage<Props> = ({pokemon}) => {
     })
   }
 
-  console.log({existeWindow: typeof window})
+  // console.log({existeWindow: typeof window})
 
   return (
     <Layout title={pokemon.name}>
@@ -120,7 +120,7 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
     paths: pokemon1010.map(name => ({
       params: {name}
     })),
-    fallback: false 
+    fallback: 'blocking' 
   }
 }
 
@@ -128,9 +128,20 @@ export const getStaticProps: GetStaticProps = async (ctx) => {
 
   const { name } = ctx.params as {name: string}
 
+  const pokemon = await getPokemonInfo(name)
+
+  if (!pokemon) {
+    return {
+      redirect: {
+        destination: '/',
+        permanent: false, // para q no sea permanente ya q en un futuro puede ser q exista el pokemon 2000 y asi
+      } 
+    }
+  }
   return {
     props: {
-      pokemon: await getPokemonInfo(name)
+      pokemon,
+      revalidate: 86400,
     }
   }
 }
